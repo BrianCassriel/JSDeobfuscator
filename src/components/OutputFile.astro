@@ -1,0 +1,24 @@
+<section class="code-panel code-panel">
+	<div class="code-panel-header">
+        <span id="output-file-name" class="code-file-name">untitled-deobfuscated.js</span>
+	</div>
+	<pre class="code-surface"><code id="deobfuscator.outputFile" class="hljs language-javascript"></code></pre>
+</section>
+
+<script>
+	import { highlightJavaScript } from "../utils";
+    import { OUTPUT_FILE_KEY, SOURCE_FILE_NAME_KEY } from "../consts";
+
+	const sourceElement = document.getElementById(OUTPUT_FILE_KEY);
+	const fileNameElement = document.getElementById("output-file-name");
+
+	if (sourceElement) {
+		const source = "// Deobfuscated code will appear here.";
+        sourceElement.innerHTML = highlightJavaScript(source);
+	}
+
+	if (fileNameElement) {
+		const fileName = sessionStorage.getItem(SOURCE_FILE_NAME_KEY);
+		fileNameElement.innerHTML = `${fileName ? fileName.replace(/\.js$/, "-deobfuscated.js") : "untitled-deobfuscated.js"}`;
+	}
+</script>

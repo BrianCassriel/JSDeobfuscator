@@ -1,0 +1,139 @@
+<svg id='watcher'
+    width="50" height="50" viewBox="0 0 180 180" 
+    fill="none" xmlns="http://www.w3.org/2000/svg"
+>
+    <mask id="mask0_19_102" style="mask-type:alpha" maskUnits="userSpaceOnUse" 
+        x="0" y="0" width="180" height="180"
+    >
+        <circle id="mask-circle" cx="90" cy="90" r="90" fill="#F5F5F4"/>
+    </mask>
+    <g mask="url(#mask0_19_102)">
+        <path id="body" d="M156 200.714C156 260.057 150.047 262 90.4 262C30.7532 262 24 260.057 24 200.714C24 141.372 30.7532 106 90.4 106C150.047 106 156 141.372 156 200.714Z" class="fill-stone-900 dark:fill-stone-100"/>
+        <path id="right-wing" d="M4 159.41C4 216.539 12.8965 250 27.6151 250C42.3336 250 44 236.961 44 179.831C44 122.702 42.3336 117 27.6151 117C12.8965 117 4 137.819 4 159.41Z" class="fill-stone-900 dark:fill-stone-100"/>
+        <path id="left-wing" d="M176 159.41C176 216.539 167.103 250 152.385 250C137.666 250 136 236.961 136 179.831C136 122.702 137.666 117 152.385 117C167.103 117 176 137.819 176 159.41Z" class="fill-stone-900 dark:fill-stone-100"/>
+        <circle id="head" cx="90" cy="79" r="59" class="fill-stone-900 dark:fill-stone-100"/>
+        <ellipse id="left-eye" cx="107.5" cy="75.5" rx="9.5" ry="11.5" class="fill-stone-100 dark:fill-stone-900 transition-[ry] duration-150 ease-in-out"/>
+        <ellipse id="right-eye" cx="72.5" cy="75.5" rx="9.5" ry="11.5" class="fill-stone-100 dark:fill-stone-900 transition-[ry] duration-150 ease-in-out"/>
+        <path id="beak" d="M90 103C90 103 91.6984 95.3077 97 88.0639C90 81.312 90 81.312 83 88.0639C88.4402 95.3077 90 103 90 103Z" class="fill-stone-100 dark:fill-stone-900"/>
+        <ellipse id="tuft1" cx="79.4462" cy="21.0933" rx="6" ry="10.5" transform="rotate(-30 79.4462 21.0933)" class="fill-stone-900 dark:fill-stone-100"/>
+        <ellipse id="tuft2" cx="86.5132" cy="20.6951" rx="6" ry="10.5" transform="rotate(15 86.5132 20.6951)" class="fill-stone-900 dark:fill-stone-100"/>
+    </g>
+</svg>
+
+<script>
+  let blinkTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  function handleMove(clientX: number, clientY: number) {
+    const svgElement = document.getElementById("watcher");
+    if (!svgElement) return;
+    
+    const rect = svgElement.getBoundingClientRect();
+    const svgCenterX = rect.left + rect.width / 2;
+    const svgCenterY = rect.top + rect.height / 2;
+    const offsetX = clientX - svgCenterX;
+    const offsetY = clientY - svgCenterY;
+
+    // Head movement
+    const maxHeadOffset = 6;
+    const headDistance = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+    const clampedHeadDistance = Math.min(headDistance, maxHeadOffset);
+    const headAngle = Math.atan2(offsetY, offsetX);
+    const headMoveX = clampedHeadDistance * Math.cos(headAngle);
+    const headMoveY = clampedHeadDistance * Math.sin(headAngle);
+
+    // Tuft movement
+    const tuftMoveFactor = 0.3;
+    const tuftMoveX = headMoveX * tuftMoveFactor;
+
+    // Eye movement
+    const maxEyesOffset = 20;
+    const eyesDistance = headDistance;
+    const eyesAngle = headAngle;
+    const clampedEyesDistance = Math.min(eyesDistance, maxEyesOffset);
+    const eyeMoveX = clampedEyesDistance * Math.cos(eyesAngle);
+    const eyeMoveY = clampedEyesDistance * Math.sin(eyesAngle);
+
+    // Beak movement
+    const beakMoveY = eyeMoveY + 2;
+
+    // Wing movement
+    const wingMoveFactor = 0.5;
+    const wingMoveX = headMoveX * wingMoveFactor;
+
+    const head = document.getElementById("head");
+    const tuft1 = document.getElementById("tuft1");
+    const tuft2 = document.getElementById("tuft2");
+    const leftEye = document.getElementById("left-eye");
+    const rightEye = document.getElementById("right-eye");
+    const beak = document.getElementById("beak");
+    const leftWing = document.getElementById("left-wing");
+    const rightWing = document.getElementById("right-wing");
+
+    if (head) {
+      head.setAttribute("cx", (90 + headMoveX).toString());
+      head.setAttribute("cy", (79 + headMoveY).toString());
+    }
+    if (tuft1) {
+      tuft1.setAttribute("cx", (79.4462 + tuftMoveX).toString());
+      tuft1.setAttribute("cy", (21.0933 + headMoveY).toString());
+    }
+    if (tuft2) {
+      tuft2.setAttribute("cx", (86.5132 + tuftMoveX).toString());
+      tuft2.setAttribute("cy", (20.6951 + headMoveY).toString());
+    }
+    if (leftEye) {
+      leftEye.setAttribute("cx", (107.5 + eyeMoveX).toString());
+      leftEye.setAttribute("cy", (75.5 + eyeMoveY).toString());
+    }
+    if (rightEye) {
+      rightEye.setAttribute("cx", (72.5 + eyeMoveX).toString());
+      rightEye.setAttribute("cy", (75.5 + eyeMoveY).toString());
+    }
+    if (beak)
+        beak.setAttribute("transform", `translate(${eyeMoveX}, ${beakMoveY})`);
+    if (leftWing)
+      leftWing.setAttribute("transform", `translate(${wingMoveX}, 0)`);
+    if (rightWing)
+      rightWing.setAttribute("transform", `translate(${wingMoveX}, 0)`);
+  }
+
+  function handleMouseMove(event: MouseEvent) {
+    handleMove(event.clientX, event.clientY);
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    }
+  }
+
+  function scheduleBlink() {
+    const nextBlinkInterval = Math.random() * 3000 + 2000;
+    blinkTimeout = setTimeout(() => {
+      const leftEye = document.getElementById("left-eye");
+      const rightEye = document.getElementById("right-eye");
+      
+      if (leftEye) leftEye.setAttribute("ry", "0");
+      if (rightEye) rightEye.setAttribute("ry", "0");
+      
+      setTimeout(() => {
+        if (leftEye) leftEye.setAttribute("ry", "14");
+        if (rightEye) rightEye.setAttribute("ry", "14");
+      }, 200);
+      
+      scheduleBlink();
+    }, nextBlinkInterval);
+  }
+
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("touchmove", handleTouchMove);
+  scheduleBlink();
+
+  window.addEventListener("beforeunload", () => {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("touchmove", handleTouchMove);
+    if (blinkTimeout)
+        clearTimeout(blinkTimeout);
+  });
+</script>

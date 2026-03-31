@@ -1,0 +1,28 @@
+<section class="code-panel code-panel">
+	<div class="code-panel-header">
+        <span id="source-file-name" class="code-file-name">untitled.js</span>
+	</div>
+	<pre class="code-surface"><code id="source-code" class="hljs language-javascript"></code></pre>
+</section>
+
+<script>
+    import { highlightJavaScript } from "../utils";
+    import { SOURCE_FILE_NAME_KEY, SOURCE_FILE_KEY } from "../consts";
+
+	const sourceElement = document.getElementById("source-code");
+	const fileNameElement = document.getElementById("source-file-name");
+
+	if (sourceElement) {
+		const source = sessionStorage.getItem(SOURCE_FILE_KEY);
+		if (source)
+			sourceElement.innerHTML = highlightJavaScript(source);
+		else
+			window.location.assign("/");
+	}
+
+	if (fileNameElement) {
+		const fileName = sessionStorage.getItem(SOURCE_FILE_NAME_KEY);
+		fileNameElement.innerHTML = `${fileName || "untitled.js"}`;
+	}
+</script>
+

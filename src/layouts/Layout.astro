@@ -1,3 +1,8 @@
+---
+import '../styles/global.css';
+import background from '../assets/background.svg';
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -6,18 +11,12 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>JS Deobfuscator</title>
 	</head>
 	<body>
-		<slot />
+		<img id="background" src={background.src} alt="" fetchpriority="high" />
+		<div id="app-shell">
+			<slot />
+		</div>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

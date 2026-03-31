@@ -1,0 +1,83 @@
+<div class="drop-upload">
+  <label class="drop-label" id="drop-label" for="file-input">
+    <span class="drop-text">deobfuscate</span>
+    <input id="file-input" type="file" />
+  </label>
+</div>
+
+<script>
+  import { SOURCE_FILE_KEY, SOURCE_FILE_NAME_KEY } from "../consts";
+
+  const label = document.getElementById("drop-label") as HTMLLabelElement | null;
+  const input = document.getElementById("file-input") as HTMLInputElement | null;
+
+  if (label && input) {
+    const isValidJsFile = (file: File) => {
+      const fileName = file.name.toLowerCase();
+      const hasValidExtension = /\.(js|mjs|cjs)$/.test(fileName);
+      const hasValidMime = file.type.includes("javascript") || file.type === "text/plain";
+      return hasValidExtension || hasValidMime;
+    };
+
+    const flashInvalid = () => {
+      label.classList.remove("is-invalid");
+      void label.offsetWidth;
+      label.classList.add("is-invalid");
+
+      window.setTimeout(() => {
+        label.classList.remove("is-invalid");
+      }, 450);
+    };
+
+    const routeToWorkingPage = (text: string, fileName: string) => {
+      sessionStorage.setItem(SOURCE_FILE_KEY, text);
+      sessionStorage.setItem(SOURCE_FILE_NAME_KEY, fileName);
+      window.location.assign("/working");
+    };
+
+    const handleFile = async (file: File | null) => {
+      if (!file) {
+        return;
+      }
+
+      if (!isValidJsFile(file)) {
+        flashInvalid();
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        routeToWorkingPage(text, file.name);
+      } catch {
+        flashInvalid();
+      }
+    };
+
+    const stopDefaults = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      label.addEventListener(eventName, stopDefaults);
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      label.addEventListener(eventName, () => label.classList.add("is-dragging"));
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      label.addEventListener(eventName, () => label.classList.remove("is-dragging"));
+    });
+
+    label.addEventListener("drop", async (event: DragEvent) => {
+      const droppedFile = event.dataTransfer?.files?.[0] ?? null;
+      await handleFile(droppedFile);
+    });
+
+    input.addEventListener("change", async () => {
+      const selectedFile = input.files?.[0] ?? null;
+      await handleFile(selectedFile);
+    });
+  }
+</script>

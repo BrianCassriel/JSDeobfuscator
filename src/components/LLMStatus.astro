@@ -1,0 +1,117 @@
+---
+import { AGENT_STATUS } from "../scripts/AgentStatus";
+
+const {
+	initialStatus = AGENT_STATUS.IDLE,
+	showOutputDropdown = true,
+} = Astro.props;
+---
+
+<section
+	class="code-panel llm-status-panel"
+	data-show-output={showOutputDropdown ? 'true' : 'false'}
+	data-expanded="false"
+>
+	{
+		showOutputDropdown && (
+			<input type="checkbox" class="llm-output-toggle-input" id="llm-output-toggle-input" />
+		)
+	}
+	<div class="code-panel-header">
+        <span class="llm-status-dot" id="llm-status-dot" data-state={initialStatus} aria-hidden="true"></span>
+        <span class="llm-status-text" id="llm-status-text">{initialStatus}</span>
+		<span class="llm-status-meta">
+			{
+				showOutputDropdown && (
+					<label
+						for="llm-output-toggle-input"
+						class="llm-output-toggle"
+						id="llm-output-toggle"
+						role="button"
+						tabindex="0"
+					>
+						View Agent Log
+					</label>
+				)
+			}
+		</span>
+	</div>
+
+	{
+		showOutputDropdown && (
+			<div class="llm-output" id="llm-output">
+				<pre class="code-surface llm-output-surface"><code id="llm-output-text" class="hljs language-javascript"></code></pre>
+			</div>
+		)
+	}
+</section>
+
+<script>
+	import { AGENT_STATUS } from "../scripts/AgentStatus";
+	import { AgentStatusUpdater } from "../scripts/AgentStatusUpdater";
+
+	const LLM_STATUS_KEY = "deobfuscator.llm.status";
+	const LLM_OUTPUT_KEY = "deobfuscator.llm.output";
+	const INITIAL_OUTPUT = "Agent log will appear here.";
+
+	const statusDotElement = document.getElementById("llm-status-dot");
+	const statusTextElement = document.getElementById("llm-status-text");
+	const outputToggleElement = document.getElementById("llm-output-toggle");
+	const outputToggleInputElement = document.getElementById("llm-output-toggle-input") as HTMLInputElement;
+	const outputTextElement = document.getElementById("llm-output-text");
+	const panelElement = document.querySelector(".llm-status-panel");
+
+	const applyStatus = (status: string, output: string) => {
+		const statusValue = status || AGENT_STATUS.IDLE;
+		if (statusTextElement)
+			statusTextElement.textContent = statusValue;
+		if (statusDotElement)
+			statusDotElement.setAttribute("data-state", statusValue);
+		if (outputTextElement && typeof output === "string") {
+			outputTextElement.innerHTML += (output || "No output provided.") + '\n';
+			outputTextElement.scrollTop = outputTextElement.scrollHeight;
+		}
+	};
+
+	const clearStatusAndLog = () => {
+		sessionStorage.removeItem(LLM_STATUS_KEY);
+		sessionStorage.removeItem(LLM_OUTPUT_KEY);
+		if (outputTextElement)
+			outputTextElement.textContent = "";
+	};
+
+	applyStatus(AGENT_STATUS.IDLE, INITIAL_OUTPUT);
+
+	window.addEventListener(AgentStatusUpdater.eventName, (event) => {
+		const detail = event && (event as CustomEvent).detail ? (event as CustomEvent).detail : {};
+		const nextStatus = typeof detail.status === "string" ? detail.status : AGENT_STATUS.IDLE;
+		const nextOutput = typeof detail.output === "string" ? detail.output : "";
+
+		if (nextStatus === AGENT_STATUS.CLEAR) {
+			clearStatusAndLog();
+		} else {
+			sessionStorage.setItem(LLM_STATUS_KEY, nextStatus);
+			if (typeof detail.output === "string")
+				sessionStorage.setItem(LLM_OUTPUT_KEY, nextOutput);
+			applyStatus(nextStatus, typeof detail.output === "string" ? nextOutput : "");
+		}
+	});
+
+	if (outputToggleElement && outputToggleInputElement) {
+		const syncExpandedState = () => {
+			if (panelElement)
+				panelElement.setAttribute("data-expanded", outputToggleInputElement.checked ? "true" : "false");
+		};
+
+		syncExpandedState();
+		outputToggleInputElement.addEventListener("change", syncExpandedState);
+
+		outputToggleElement.addEventListener("keydown", (event) => {
+			if (event.key !== "Enter" && event.key !== " ")
+				return;
+			event.preventDefault();
+			outputToggleInputElement.checked = !outputToggleInputElement.checked;
+			outputToggleInputElement.dispatchEvent(new Event("change", { bubbles: true }));
+		});
+	}
+</script>

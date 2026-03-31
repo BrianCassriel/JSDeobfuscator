@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import SourceFile from '../components/SourceFile.astro';
+import OutputFile from '../components/OutputFile.astro';
+import LLMStatus from '../components/LLMStatus.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout>
+    <Header />
+    <div class="viewer-grid">
+        <SourceFile />
+        <OutputFile />
+    </div>
+    <LLMStatus />
+    <Footer />
+    <script>
+        const runMain = async () => {
+            await import("../scripts/main.ts");
+        };
+
+        if (document.readyState === "loading")
+            document.addEventListener("DOMContentLoaded", runMain, { once: true });
+        else
+            runMain();
+    </script>
+</Layout>
