@@ -6,7 +6,7 @@ hljs.registerLanguage('javascript', javascript);
 
 export function highlightJavaScript(sourceCode: string): string {
     return hljs.highlight(sourceCode, { language: 'javascript' }).value;
-};
+}
 
 export function setOutputFile(output: string) {
     sessionStorage.setItem(OUTPUT_FILE_KEY, output);

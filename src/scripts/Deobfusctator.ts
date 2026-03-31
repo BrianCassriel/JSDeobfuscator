@@ -1,14 +1,17 @@
 import { setOutputFile } from "../utils";
+import { DeobfuscatorAgent } from "./agent/DeobfuscatorAgent";
 import { AgentStatusUpdater } from "./AgentStatusUpdater";
 import { deobfuscate } from "js-deobfuscator";
 
 export class Deobfuscator {
     sourceFile: string;
     outputFile: string;
+    agent: DeobfuscatorAgent;
 
     constructor(sourceFile: string, outputFile: string) {
         this.sourceFile = sourceFile;
         this.outputFile = outputFile;
+        this.agent = new DeobfuscatorAgent(this.sourceFile, this.outputFile);
         this.start();
     }
 
@@ -16,15 +19,17 @@ export class Deobfuscator {
         AgentStatusUpdater.clear();
         AgentStatusUpdater.running("Starting deobfuscation process...");
         this.tryGenericDeobfuscation();
-        // Add agent deobfuscation logic
+        this.agent.start();
     }
 
     abort() {
+        this.agent.abort();
         AgentStatusUpdater.error("Deobfuscation process aborted by user.");
-        // Add aborting the deobfuscation process
+        // Add aborting the deobfuscation process logic here
     }
 
     finish() {
+        this.agent.finish();
         AgentStatusUpdater.finished();
         // Add finalizing the deobfuscation process
     }
@@ -55,7 +60,7 @@ export class Deobfuscator {
         try {
             this.outputFile = deobfuscate(this.sourceFile, config);
         } catch (error) {
-            console.error("Error during generic deobfuscation:", error);
+            console.warn("Error during generic deobfuscation:", error);
             AgentStatusUpdater.error("Failed to apply generic deobfuscation techniques.");
             return;
         }
