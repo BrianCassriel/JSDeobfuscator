@@ -1,6 +1,24 @@
+<svg width="0" height="0" style="position:absolute">
+	<defs>
+		<linearGradient id="panel-btn-gradient" x1="0" y1="1" x2="1" y2="0">
+			<stop offset="0%" stop-color="var(--accent-one)" />
+			<stop offset="100%" stop-color="var(--accent-two)" />
+		</linearGradient>
+	</defs>
+</svg>
+
 <section class="code-panel code-panel">
 	<div class="code-panel-header">
         <span id="output-file-name" class="code-file-name">untitled-deobfuscated.js</span>
+		<div class="code-panel-actions">
+			<button id="output-copy-btn" class="panel-action-btn" title="Copy to clipboard" aria-label="Copy to clipboard">
+				<svg class="icon-copy" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+				<svg class="icon-check" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+			</button>
+			<button id="output-download-btn" class="panel-action-btn" title="Download file" aria-label="Download file">
+				<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+			</button>
+		</div>
 	</div>
 	<pre class="code-surface"><code id="deobfuscator.outputFile" class="hljs language-javascript"></code></pre>
 </section>
@@ -11,6 +29,8 @@
 
 	const sourceElement = document.getElementById(OUTPUT_FILE_KEY);
 	const fileNameElement = document.getElementById("output-file-name");
+	const copyBtn = document.getElementById("output-copy-btn");
+	const downloadBtn = document.getElementById("output-download-btn");
 
 	if (sourceElement) {
 		const source = "// Deobfuscated code will appear here.";
@@ -20,5 +40,28 @@
 	if (fileNameElement) {
 		const fileName = sessionStorage.getItem(SOURCE_FILE_NAME_KEY);
 		fileNameElement.innerHTML = `${fileName ? fileName.replace(/\.js$/, "-deobfuscated.js") : "untitled-deobfuscated.js"}`;
+	}
+
+	if (copyBtn && sourceElement) {
+		copyBtn.addEventListener("click", async () => {
+			const text = sourceElement.textContent ?? "";
+			await navigator.clipboard.writeText(text);
+			copyBtn.setAttribute("data-copied", "true");
+			setTimeout(() => copyBtn.removeAttribute("data-copied"), 1500);
+		});
+	}
+
+	if (downloadBtn && sourceElement && fileNameElement) {
+		downloadBtn.addEventListener("click", () => {
+			const text = sourceElement.textContent ?? "";
+			const fileName = fileNameElement.textContent || "untitled-deobfuscated.js";
+			const blob = new Blob([text], { type: "text/javascript" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = fileName;
+			a.click();
+			URL.revokeObjectURL(url);
+		});
 	}
 </script>

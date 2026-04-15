@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import SourceFile from '../components/SourceFile.astro';
 import OutputFile from '../components/OutputFile.astro';
 import LLMStatus from '../components/LLMStatus.astro';
 import Footer from '../components/Footer.astro';
@@ -10,10 +9,10 @@ import Footer from '../components/Footer.astro';
 <Layout>
     <Header />
     <div class="viewer-grid">
-        <SourceFile />
         <OutputFile />
+        <div class="panel-splitter" id="panel-splitter" role="separator" aria-orientation="vertical" aria-label="Resize panels" tabindex="0"></div>
+        <LLMStatus />
     </div>
-    <LLMStatus />
     <Footer />
     <script>
         const runMain = async () => {
@@ -24,5 +23,82 @@ import Footer from '../components/Footer.astro';
             document.addEventListener("DOMContentLoaded", runMain, { once: true });
         else
             runMain();
+
+        // Panel splitter
+        const splitter = document.getElementById("panel-splitter");
+        const grid = splitter?.parentElement as HTMLElement | null;
+
+        if (splitter && grid) {
+            const panels = Array.from(grid.querySelectorAll<HTMLElement>(":scope > .code-panel"));
+            const [left, right] = panels;
+
+            const totalWidth = () => {
+                const style = getComputedStyle(grid);
+                const panelBorder = parseFloat(getComputedStyle(left).borderLeftWidth)
+                    + parseFloat(getComputedStyle(left).borderRightWidth);
+                return grid.clientWidth
+                    - splitter.offsetWidth
+                    - parseFloat(style.paddingLeft)
+                    - parseFloat(style.paddingRight)
+                    - panelBorder * 2;
+            };
+
+            // Set initial 60/40 split
+            const init = () => {
+                const w = totalWidth();
+                left.style.width = `${w * 0.6}px`;
+                right.style.width = `${w * 0.4}px`;
+            };
+            init();
+
+            let dragging = false;
+            let startX = 0;
+            let startLeftW = 0;
+
+            const onPointerMove = (e: PointerEvent) => {
+                if (!dragging) return;
+                const dx = e.clientX - startX;
+                const total = totalWidth();
+                const minW = 120;
+                const newLeft = Math.min(Math.max(startLeftW + dx, minW), total - minW);
+                left.style.width = `${newLeft}px`;
+                right.style.width = `${total - newLeft}px`;
+            };
+
+            const onPointerUp = () => {
+                dragging = false;
+                splitter.classList.remove("is-dragging");
+                splitter.releasePointerCapture((splitter as any)._captureId);
+            };
+
+            splitter.addEventListener("pointerdown", (e: PointerEvent) => {
+                dragging = true;
+                startX = e.clientX;
+                startLeftW = left.offsetWidth;
+                splitter.classList.add("is-dragging");
+                (splitter as any)._captureId = e.pointerId;
+                splitter.setPointerCapture(e.pointerId);
+            });
+
+            splitter.addEventListener("pointermove", onPointerMove);
+            splitter.addEventListener("pointerup", onPointerUp);
+            splitter.addEventListener("pointercancel", onPointerUp);
+
+            // Keyboard resize
+            splitter.addEventListener("keydown", (e: KeyboardEvent) => {
+                const step = e.shiftKey ? 50 : 10;
+                const total = totalWidth();
+                const minW = 120;
+                let w = left.offsetWidth;
+                if (e.key === "ArrowLeft") w = Math.max(w - step, minW);
+                else if (e.key === "ArrowRight") w = Math.min(w + step, total - minW);
+                else return;
+                e.preventDefault();
+                left.style.width = `${w}px`;
+                right.style.width = `${total - w}px`;
+            });
+
+            window.addEventListener("resize", init);
+        }
     </script>
 </Layout>

@@ -3,47 +3,23 @@ import { AGENT_STATUS } from "../scripts/AgentStatus";
 
 const {
 	initialStatus = AGENT_STATUS.IDLE,
-	showOutputDropdown = true,
 } = Astro.props;
 ---
 
 <section
 	class="code-panel llm-status-panel"
-	data-show-output={showOutputDropdown ? 'true' : 'false'}
-	data-expanded="false"
+	data-running="false"
 >
-	{
-		showOutputDropdown && (
-			<input type="checkbox" class="llm-output-toggle-input" id="llm-output-toggle-input" />
-		)
-	}
 	<div class="code-panel-header">
-        <span class="llm-status-dot" id="llm-status-dot" data-state={initialStatus} aria-hidden="true"></span>
-        <span class="llm-status-text" id="llm-status-text">{initialStatus}</span>
-		<span class="llm-status-meta">
-			{
-				showOutputDropdown && (
-					<label
-						for="llm-output-toggle-input"
-						class="llm-output-toggle"
-						id="llm-output-toggle"
-						role="button"
-						tabindex="0"
-					>
-						View Agent Log
-					</label>
-				)
-			}
-		</span>
+		<div class="llm-status-group">
+	        <span class="llm-status-dot" id="llm-status-dot" data-state={initialStatus} aria-hidden="true"></span>
+	        <span class="llm-status-text" id="llm-status-text">{initialStatus}</span>
+		</div>
 	</div>
 
-	{
-		showOutputDropdown && (
-			<div class="llm-output" id="llm-output">
-				<pre class="code-surface llm-output-surface"><code id="llm-output-text" class="hljs language-javascript"></code></pre>
-			</div>
-		)
-	}
+	<div class="llm-output" id="llm-output">
+		<pre class="code-surface llm-output-surface"><code id="llm-output-text" class="hljs language-javascript"></code><span class="llm-output-cursor" aria-hidden="true"></span></pre>
+	</div>
 </section>
 
 <script>
@@ -56,10 +32,14 @@ const {
 
 	const statusDotElement = document.getElementById("llm-status-dot");
 	const statusTextElement = document.getElementById("llm-status-text");
-	const outputToggleElement = document.getElementById("llm-output-toggle");
-	const outputToggleInputElement = document.getElementById("llm-output-toggle-input") as HTMLInputElement;
 	const outputTextElement = document.getElementById("llm-output-text");
+	const outputSurface = document.querySelector<HTMLElement>(".llm-output-surface");
 	const panelElement = document.querySelector(".llm-status-panel");
+
+	const isScrolledToBottom = () => {
+		if (!outputSurface) return true;
+		return outputSurface.scrollHeight - outputSurface.scrollTop - outputSurface.clientHeight < 4;
+	};
 
 	const applyStatus = (status: string, output: string) => {
 		const statusValue = status || AGENT_STATUS.IDLE;
@@ -67,9 +47,13 @@ const {
 			statusTextElement.textContent = statusValue;
 		if (statusDotElement)
 			statusDotElement.setAttribute("data-state", statusValue);
+		if (panelElement)
+			panelElement.setAttribute("data-running", (statusValue === AGENT_STATUS.RUNNING || statusValue === AGENT_STATUS.WARNING) ? "true" : "false");
 		if (outputTextElement && typeof output === "string") {
+			const atBottom = isScrolledToBottom();
 			outputTextElement.innerHTML += (output || "No output provided.") + '\n';
-			outputTextElement.scrollTop = outputTextElement.scrollHeight;
+			if (atBottom && outputSurface)
+				outputSurface.scrollTop = outputSurface.scrollHeight;
 		}
 	};
 
@@ -96,22 +80,4 @@ const {
 			applyStatus(nextStatus, typeof detail.output === "string" ? nextOutput : "");
 		}
 	});
-
-	if (outputToggleElement && outputToggleInputElement) {
-		const syncExpandedState = () => {
-			if (panelElement)
-				panelElement.setAttribute("data-expanded", outputToggleInputElement.checked ? "true" : "false");
-		};
-
-		syncExpandedState();
-		outputToggleInputElement.addEventListener("change", syncExpandedState);
-
-		outputToggleElement.addEventListener("keydown", (event) => {
-			if (event.key !== "Enter" && event.key !== " ")
-				return;
-			event.preventDefault();
-			outputToggleInputElement.checked = !outputToggleInputElement.checked;
-			outputToggleInputElement.dispatchEvent(new Event("change", { bubbles: true }));
-		});
-	}
 </script>

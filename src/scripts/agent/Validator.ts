@@ -4,14 +4,15 @@ export class Validator {
     static validate(code: string): boolean {
         try {
             parse(code, { ecmaVersion: "latest", sourceType: "module" });
-        } catch (error) {
+            return true;
+        } catch (moduleError) {
             try {
                 parse(code, { ecmaVersion: "latest", sourceType: "script" });
-            } catch (fallbackError) {
-                console.error("Validation error:", fallbackError);
+                return true;
+            } catch {
+                console.error("Validation error:", moduleError);
                 return false;
             }
         }
-        return true;
     }
 }

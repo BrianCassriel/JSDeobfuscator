@@ -2,6 +2,7 @@ import { setOutputFile } from "../utils";
 import { DeobfuscatorAgent } from "./agent/DeobfuscatorAgent";
 import { AgentStatusUpdater } from "./AgentStatusUpdater";
 import { deobfuscate } from "js-deobfuscator";
+import { DeterministicTransforms } from "./transforms/DeterministicTransforms";
 
 export class Deobfuscator {
     sourceFile: string;
@@ -17,21 +18,25 @@ export class Deobfuscator {
 
     start() {
         AgentStatusUpdater.clear();
-        AgentStatusUpdater.running("Starting deobfuscation process...");
+
+        AgentStatusUpdater.running("Layer 1: Applying generic deobfuscation.");
         this.tryGenericDeobfuscation();
+
+        AgentStatusUpdater.running("Layer 1: Running deterministic transforms.");
+        this.runDeterministicTransforms();
+
+        AgentStatusUpdater.running("Layer 2: Starting agentic semantic analysis.");
         this.agent.start();
     }
 
     abort() {
         this.agent.abort();
         AgentStatusUpdater.error("Deobfuscation process aborted by user.");
-        // Add aborting the deobfuscation process logic here
     }
 
     finish() {
         this.agent.finish();
         AgentStatusUpdater.finished();
-        // Add finalizing the deobfuscation process
     }
 
     tryGenericDeobfuscation() {
@@ -61,10 +66,26 @@ export class Deobfuscator {
             this.outputFile = deobfuscate(this.sourceFile, config);
         } catch (error) {
             console.warn("Error during generic deobfuscation:", error);
-            AgentStatusUpdater.running("Failed to apply generic deobfuscation techniques.");
+            AgentStatusUpdater.running("Generic deobfuscation failed, continuing with deterministic transforms...");
             return;
         }
         setOutputFile(this.outputFile);
         AgentStatusUpdater.running("Applied generic deobfuscation techniques.");
+    }
+
+    runDeterministicTransforms() {
+        try {
+            const result = DeterministicTransforms.run(this.outputFile);
+            if (result.transformsApplied.length > 0) {
+                this.outputFile = result.code;
+                setOutputFile(this.outputFile);
+                AgentStatusUpdater.running(`Deterministic transforms: ${result.transformsApplied.join(', ')}`);
+            } else {
+                AgentStatusUpdater.running("No additional deterministic transforms needed.");
+            }
+        } catch (error) {
+            console.error("Error during deterministic transforms:", error);
+            AgentStatusUpdater.error(`Deterministic transforms failed: ${error instanceof Error ? error.message : error}`);
+        }
     }
 }

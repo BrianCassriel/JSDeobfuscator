@@ -11,7 +11,7 @@ export function highlightJavaScript(sourceCode: string): string {
 export function setOutputFile(output: string) {
     const outputElement = document.getElementById(OUTPUT_FILE_KEY);
     if (outputElement)
-        outputElement.textContent = output;
+        outputElement.innerHTML = highlightJavaScript(output);
 }
 
 export function getOutputFile(): string | null {

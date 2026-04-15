@@ -21,6 +21,15 @@ export class AgentStatusUpdater {
         }));
     }
 
+    static warning(message: string) {
+        window.dispatchEvent(new CustomEvent(AgentStatusUpdater.eventName, {
+            detail: {
+                status: AGENT_STATUS.WARNING,
+                output: message
+            }
+        }));
+    }
+
     static error(errorMessage: string) {
         window.dispatchEvent(new CustomEvent(AgentStatusUpdater.eventName, {
             detail: {
