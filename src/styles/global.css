@@ -33,7 +33,6 @@ body {
 #app-shell {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
 }
 
 #container {
@@ -210,7 +209,9 @@ main {
   background: linear-gradient(66.77deg, var(--accent-one-soft) 0%, var(--accent-one-pale) 100%) padding-box,
   linear-gradient(155deg, var(--accent-one) 0%, var(--accent-two) 33%, var(--accent-one-pale) 65%) border-box;
   height: clamp(340px, calc(100vh - 220px), 760px);
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .viewer-grid {
@@ -254,6 +255,9 @@ main {
 .code-surface {
   margin: 0;
   padding: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   background: linear-gradient(66.77deg, rgba(191, 249, 200, 0) 0%, rgba(213, 241, 218, 0) 100%);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.88rem;
@@ -288,25 +292,12 @@ pre.code-surface code.hljs {
 }
 
 .code-panel .code-panel-header {
-  position: sticky;
-  top: 0;
+  flex: 0 0 auto;
   z-index: 2;
   border-bottom: none;
   background: linear-gradient(66.77deg, var(--accent-one-soft) 0%, var(--accent-one-pale) 100%);
 }
 
-.code-panel .code-panel-header::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -28px;
-  left: 0;
-  height: 28px;
-  pointer-events: none;
-  background: linear-gradient(66.77deg, var(--accent-one-soft) 0%, var(--accent-one-pale) 100%);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
 
 .code-panel .code-surface {
   width: 100%;
