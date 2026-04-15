@@ -11,7 +11,7 @@ export class Deobfuscator {
     constructor(sourceFile: string, outputFile: string) {
         this.sourceFile = sourceFile;
         this.outputFile = outputFile;
-        this.agent = new DeobfuscatorAgent(this.sourceFile, this.outputFile);
+        this.agent = new DeobfuscatorAgent(this.sourceFile);
         this.start();
     }
 
@@ -61,7 +61,7 @@ export class Deobfuscator {
             this.outputFile = deobfuscate(this.sourceFile, config);
         } catch (error) {
             console.warn("Error during generic deobfuscation:", error);
-            AgentStatusUpdater.error("Failed to apply generic deobfuscation techniques.");
+            AgentStatusUpdater.running("Failed to apply generic deobfuscation techniques.");
             return;
         }
         setOutputFile(this.outputFile);

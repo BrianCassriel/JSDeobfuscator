@@ -1,10 +1,16 @@
+import { parse } from "acorn";
+
 export class Validator {
     static validate(code: string): boolean {
         try {
-            new Function(code);
+            parse(code, { ecmaVersion: "latest", sourceType: "module" });
         } catch (error) {
-            console.error("Validation error:", error);
-            return false;
+            try {
+                parse(code, { ecmaVersion: "latest", sourceType: "script" });
+            } catch (fallbackError) {
+                console.error("Validation error:", fallbackError);
+                return false;
+            }
         }
         return true;
     }

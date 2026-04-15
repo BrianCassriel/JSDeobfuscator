@@ -2,11 +2,10 @@ import OpenAI from "openai";
 import type { Plan } from "./Planner";
 import { zodTextFormat } from "openai/helpers/zod"
 import { z } from "zod";
-import { Memory } from "./Memory";
 
 export const PatchFormat = z.object({
-    startLine: z.number(),
-    replacement: z.string(),
+    startCharacter: z.number(),
+    characters: z.string(),
     reason: z.string()
 });
 
@@ -17,11 +16,17 @@ export class Editor {
         const prompt = `
         You are deobfuscating JavaScript code.
         Perform the following action: ${plan.action}
-        Preserve behavior. Do not change the functionality of the code. DO NOT rewrite the whole file at once.
+        Preserve behavior. Do not change the functionality of the code. 
+        DO NOT rewrite the whole file at once. Instead, make small incremental changes that will gradually 
+        deobfuscate the code while ensuring it remains functional after each change. Only modify the specific 
+        part of the code necessary to achieve the desired result of the action.
         Source file:
         ${sourceFile}
         Output file:
         ${outputFile}
+        Return a patch object where:
+        - startCharacter is a 1-based character index in the output file.
+        - characters is the replacement text to write at that position.
         `;
         const apiKey = import.meta.env.PUBLIC_OPENAI_API_KEY;
         if (!apiKey)

@@ -9,14 +9,13 @@ export function highlightJavaScript(sourceCode: string): string {
 }
 
 export function setOutputFile(output: string) {
-    sessionStorage.setItem(OUTPUT_FILE_KEY, output);
     const outputElement = document.getElementById(OUTPUT_FILE_KEY);
     if (outputElement)
         outputElement.textContent = output;
 }
 
 export function getOutputFile(): string | null {
-    return sessionStorage.getItem(OUTPUT_FILE_KEY);
+    return document.getElementById(OUTPUT_FILE_KEY)?.textContent ?? null;
 }
 
 export function getSourceFile(): string | null {

@@ -3,9 +3,10 @@ import { zodTextFormat } from "openai/helpers/zod"
 import { z } from "zod";
 import { Memory } from "./Memory";
 import { AgentStatusUpdater } from "../AgentStatusUpdater";
+import { ACTIONS } from "./Actions";
 
 export const PlanFormat = z.object({
-    action: z.string(),
+    action: z.enum(Object.values(ACTIONS)),
     reason: z.string()
 });
 
@@ -84,6 +85,8 @@ export class Planner {
         You are a JavaScript code deobfuscation planner. Given the working file:
         ${outputFile}
         Your task is to create a plan for a single next step in further deobfuscating the JavaScript code from the source file into the output file.
+        Steps should be small and incremental, ensuring that the code remains functional after each step.
+        They will eventually be in the format of a patch that can be directly applied to the output file from a start character onward.
         Available actions:
         rename_identifier
         decode_hex_literals

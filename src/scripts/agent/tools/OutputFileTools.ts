@@ -1,3 +1,5 @@
+import { setOutputFile } from "../../../utils";
+
 export class OutputFileTools {
     static readLines(file: string, firstLine: number, lastLine: number): string {
         if (!file)
@@ -7,11 +9,12 @@ export class OutputFileTools {
         return selectedLines.join("\n");
     }
 
-    static writeLines(file: string, startLine: number, lines: string): void {
+    static writeCharacters(file: string, startCharacter: number, characters: string): void {
         if (!file)
             throw new Error("File is empty.");
-        const outputLines = file.split("\n");
-        outputLines.splice(startLine - 1, lines.split("\n").length, ...lines.split("\n"));
-        sessionStorage.setItem("outputFile", outputLines.join("\n"));
+        const index = Math.max(0, Math.min(startCharacter - 1, file.length));
+        const output = file.slice(0, index) + characters + file.slice(index + characters.length);
+        setOutputFile(output);
+        console.log(`Wrote characters at index ${startCharacter}: ${characters}`);
     }
 }

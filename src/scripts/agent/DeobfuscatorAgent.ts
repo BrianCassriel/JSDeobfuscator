@@ -1,4 +1,4 @@
-import { setOutputFile } from "../../utils";
+import { getOutputFile } from "../../utils";
 import { AgentStatusUpdater } from "../AgentStatusUpdater";
 import { ACTIONS } from "./Actions";
 import { Editor } from "./Editor";
@@ -9,36 +9,35 @@ import { Validator } from "./Validator";
 
 export class DeobfuscatorAgent {
     sourceFile: string;
-    outputFile: string;
     shouldStop: boolean = false;
     memory: Memory = new Memory();
     score: number = 0;
     requestsPerMinute: number = 1;
 
-    constructor(sourceFile: string, outputFile: string) {
+    constructor(sourceFile: string) {
         this.sourceFile = sourceFile;
-        this.outputFile = outputFile;
     }
 
     async start() {
         while (this.shouldStop === false) {
             await new Promise(resolve => setTimeout(resolve, 60*1000/this.requestsPerMinute));
-            const plan = await Planner.plan(this.outputFile, this.memory);
-            AgentStatusUpdater.running(`Planned action: ${plan.action} - ${plan.reason}`);
+            const outputFile = getOutputFile() ?? "";
+            const plan = await Planner.plan(outputFile, this.memory);
+            AgentStatusUpdater.running(`Planned action: ${plan.action}\n - ${plan.reason}`);
             if (plan.action === ACTIONS.STOP) {
                 this.finish();
                 break;
             }
-            const patch = await Editor.applyPlan(this.sourceFile, this.outputFile, plan);
-            Executor.execute(patch, this.outputFile);
-            if (!Validator.validate(this.outputFile)) {
+            const patch = await Editor.applyPlan(this.sourceFile, outputFile, plan);
+            AgentStatusUpdater.running(`Applying patch: ${patch.characters}\n - ${patch.reason}`);
+            Executor.execute(patch);
+            if (!Validator.validate(getOutputFile() ?? "")) {
                 AgentStatusUpdater.error("Validation failed after applying patch.");
                 Executor.revert();
-                this.updateScore(-1);
+                this.changeScore(-1);
                 continue;
             }
-            this.updateScore(1);
-            setOutputFile(this.outputFile);
+            this.changeScore(1);
         }
     }
 
@@ -51,7 +50,7 @@ export class DeobfuscatorAgent {
         AgentStatusUpdater.finished();
     }
 
-    updateScore(delta: number) {
+    changeScore(delta: number) {
         this.score += delta;
     }
 }
